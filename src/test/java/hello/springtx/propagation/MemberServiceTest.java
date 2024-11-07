@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.transaction.UnexpectedRollbackException;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -86,5 +87,58 @@ public class MemberServiceTest {
         //then
         Assertions.assertTrue(memberRepository.find(username).isPresent());
         Assertions.assertTrue(logRepository.find(username).isPresent());
+    }
+
+    /**
+     * memberService    @Transactional:On
+     * memberRepository @Transactional:On
+     * logRepository    @Transactional:On Exception
+     */
+
+    @Test
+    void outerTxOn_fail(){
+        //given
+        String username = "로그예외outerTxOn_fail";
+        //when
+        assertThatThrownBy(()->memberService.joinV1(username))
+                .isInstanceOf(RuntimeException.class);
+        //then
+        Assertions.assertTrue(memberRepository.find(username).isEmpty());
+        Assertions.assertTrue(logRepository.find(username).isEmpty());
+    }
+
+    /**
+     * memberService    @Transactional:On
+     * memberRepository @Transactional:On
+     * logRepository    @Transactional:On Exception
+     */
+
+    @Test
+    void recoverException_fail(){
+        //given
+        String username = "로그예외outerTxOn_fail";
+        //when
+        assertThatThrownBy(()->memberService.joinV2(username))
+                .isInstanceOf(UnexpectedRollbackException.class);
+        //then
+        Assertions.assertTrue(memberRepository.find(username).isPresent());
+        Assertions.assertTrue(logRepository.find(username).isEmpty());
+    }
+
+    /**
+     * memberService    @Transactional:On
+     * memberRepository @Transactional:On
+     * logRepository    @Transactional:On(REQUIRES_NEW) Exception
+     */
+
+    @Test
+    void recoverException_success(){
+        //given
+        String username = "로그예외recoverException_success";
+        //when
+        memberService.joinV2(username);
+        //then
+        Assertions.assertTrue(memberRepository.find(username).isPresent());
+        Assertions.assertTrue(logRepository.find(username).isEmpty());
     }
 }

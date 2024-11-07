@@ -28,9 +28,10 @@ public class MemberService {
 
     }
 
+    @Transactional
     public void joinV2(String username){
-        Member member = new Member();
-        Log logMessage = new Log();
+        Member member = new Member(username);
+        Log logMessage = new Log(username);
 
         log.info("memberRepository 호출 시작");
         memberRepository.save(member);
